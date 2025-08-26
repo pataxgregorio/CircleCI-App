@@ -1,0 +1,28 @@
+version: 2.1
+orbs:
+  node: circleci/node@5.0.0
+jobs:
+  build:
+    docker:
+      - image: cimg/node:16.10.0
+    steps:
+      - checkout
+      - run:
+          name: Instalar dependencias
+          command: npm install
+      - run:
+          name: Corregir permisos de eslint
+          command: chmod +x node_modules/.bin/eslint
+      - run:
+          name: Compilar proyecto Quasar
+          command: npm run build
+      - persist_to_workspace:
+          root: ./dist/spa
+          paths:
+            - .
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
