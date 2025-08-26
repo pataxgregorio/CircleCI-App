@@ -1,9 +1,13 @@
 <template>
-  <iframe src="http://godieguia.com/directorio/" frameborder="1" style="       /* iframes are inline by default */
-
-    border: none;         /* Reset default border */
-    height: 100vh;        /* Viewport-relative units */
-    width: 100vw;" width="100%" height="100% !important"></iframe>
+  <iframe
+    src="http://godieguia.com/directorio/"
+    frameborder="1"
+    style="
+      border: none;
+      height: 100vh;
+      width: 100vw;
+    "
+  ></iframe>
 </template>
 
 <script setup>
