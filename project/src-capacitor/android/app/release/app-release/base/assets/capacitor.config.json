@@ -1,0 +1,9 @@
+{
+	"appId": "com.wGodieguia_18413628",
+	"appName": "Godieguia",
+	"webDir": "www",
+	"server": {
+		"url": "http://godieguia.com/directorio/",
+		"cleartext": true
+	}
+}
