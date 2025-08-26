@@ -1,0 +1,24 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:16.10.0 # O la versión de Node.js que necesites
+    steps:
+      - checkout
+      - run:
+          name: Instalar dependencias
+          command: npm install
+      - run:
+          name: Compilar proyecto Quasar
+          command: npm run build
+      - persist_to_workspace:
+          root: ./dist/spa # Asegúrate de que esta ruta sea correcta para tu compilación
+          paths:
+            - .
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
