@@ -9,6 +9,12 @@ jobs:
       - run:
           name: Add iOS Platform
           command: npx cap add ios
+      - run:
+          name: Build iOS Project
+          command: |
+            cd ios/App
+            xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -sdk iphoneos -archivePath $PWD/build/App.xcarchive archive
+            xcodebuild -exportArchive -archivePath $PWD/build/App.xcarchive -exportOptionsPlist exportOptions.plist -exportPath $PWD/build
 
 workflows:
   version: 2
