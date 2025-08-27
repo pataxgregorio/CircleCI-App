@@ -6,7 +6,8 @@ jobs:
   build_and_test:
     executor:
       name: node/default
-      tag: '16.14.0' # Puedes cambiar esta versión por la que necesites
+      # Aquí está el cambio. Usa la versión que tú tienes.
+      tag: '22.14.0'
     steps:
       - checkout
       - node/install-packages:
@@ -25,4 +26,4 @@ workflows:
           filters:
             branches:
               only:
-                - main # Este job solo se ejecutará en la rama 'main'
+                - main
