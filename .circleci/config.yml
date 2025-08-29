@@ -1,63 +1,74 @@
-name: CI/CD Capacitor iOS
+version: 2.1
 
-on:
-  push:
-    branches:
-      - main
+executors:
+  macos-executor:
+    macos:
+      xcode: 14.3.1  # Puedes especificar una versión de Xcode. Elige la que mejor se adapte a tu proyecto.
+    resource_class: large  # Se recomienda 'large' para compilaciones de iOS.
 
 jobs:
   build_ios:
-    name: Build iOS App
-    runs-on: macos-latest
-
+    executor: macos-executor
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - checkout
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+      - run:
+          name: Set up Node.js
+          command: |
+            echo "Setting up Node.js"
+            nvm install 18  # Usa nvm para instalar Node.js
+            nvm use 18
+            npm install -g yarn # Opcional: Instalar yarn si lo usas
 
-      - name: Install dependencies
-        run: npm install
+      - run:
+          name: Install dependencies
+          command: npm install
 
-      # PASO CLAVE: Agregar la plataforma iOS
-      - name: Add iOS platform to project
-        run: npx cap add ios
+      - run:
+          name: Add iOS platform to project
+          command: npx cap add ios
 
-      - name: Build Quasar project
-        run: npx quasar build
+      - run:
+          name: Build Quasar project
+          command: npx quasar build
 
-      - name: Copy Quasar build to Capacitor
-        run: npx cap sync ios
+      - run:
+          name: Copy Quasar build to Capacitor
+          command: npx cap sync ios
 
-      - name: Install Cocoapods
-        run: |
-          cd ios
-          pod install
+      - run:
+          name: Install Cocoapods
+          command: |
+            cd ios
+            pod install
 
-      - name: Build and archive iOS project
-        run: |
-          xcodebuild clean archive \
-          -workspace ios/App.xcworkspace \
-          -scheme App \
-          -configuration Release \
-          -archivePath build/App.xcarchive \
-          -destination generic/platform=iOS \
-          CODE_SIGN_STYLE="Manual" \
-          CODE_SIGN_IDENTITY="Apple Distribution: Nombre de tu Empresa (XXXXX)" \
-          PROVISIONING_PROFILE_SPECIFIER="Nombre del Perfil de Provisionamiento"
+      - run:
+          name: Build and archive iOS project
+          command: |
+            xcodebuild clean archive \
+            -workspace ios/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            -destination generic/platform=iOS \
+            CODE_SIGN_STYLE="Manual" \
+            CODE_SIGN_IDENTITY="Apple Distribution: Nombre de tu Empresa (XXXXX)" \
+            PROVISIONING_PROFILE_SPECIFIER="Nombre del Perfil de Provisionamiento"
 
-      - name: Export .ipa
-        run: |
-          xcodebuild -exportArchive \
-          -archivePath build/App.xcarchive \
-          -exportPath build/ipa \
-          -exportOptionsPlist exportOptions.plist
+      - run:
+          name: Export .ipa
+          command: |
+            xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist exportOptions.plist
 
-      - name: Upload .ipa artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: app-release
-          path: build/ipa/
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/ipa
+
+workflows:
+  build_app:
+    jobs:
+      - build_ios
