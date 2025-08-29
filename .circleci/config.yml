@@ -3,8 +3,8 @@ version: 2.1
 executors:
   macos-executor:
     macos:
-      xcode: 14.2.0 # Opcional: Cambia a una versión de Xcode compatible.
-    resource_class: medium # Usa la clase de recurso 'medium' para el plan gratuito.
+      xcode: 13.4.1 # Cambia a una versión de Xcode más antigua
+    resource_class: medium
 
 jobs:
   build_ios:
@@ -16,8 +16,8 @@ jobs:
           name: Set up Node.js
           command: |
             echo "Setting up Node.js"
-            nvm install 18
-            nvm use 18
+            nvm install 22
+            nvm use 22
 
       - run:
           name: Install dependencies
