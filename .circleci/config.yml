@@ -3,8 +3,7 @@ version: 2.1
 executors:
   macos-executor:
     macos:
-      xcode: 13.4.1 # Cambia a una versión de Xcode más antigua
-    resource_class: medium
+      xcode: 14.2.0
 
 jobs:
   build_ios:
