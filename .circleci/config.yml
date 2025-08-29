@@ -17,7 +17,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22'
+          node-version: '18'
 
       - name: Install dependencies
         run: npm install
@@ -37,6 +37,27 @@ jobs:
           cd ios
           pod install
 
-      - name: Build iOS project
+      - name: Build and archive iOS project
         run: |
-          xcodebuild clean build -workspace ios/App.xcworkspace -scheme App -destination generic/platform=iOS
+          xcodebuild clean archive \
+          -workspace ios/App.xcworkspace \
+          -scheme App \
+          -configuration Release \
+          -archivePath build/App.xcarchive \
+          -destination generic/platform=iOS \
+          CODE_SIGN_STYLE="Manual" \
+          CODE_SIGN_IDENTITY="Apple Distribution: Nombre de tu Empresa (XXXXX)" \
+          PROVISIONING_PROFILE_SPECIFIER="Nombre del Perfil de Provisionamiento"
+
+      - name: Export .ipa
+        run: |
+          xcodebuild -exportArchive \
+          -archivePath build/App.xcarchive \
+          -exportPath build/ipa \
+          -exportOptionsPlist exportOptions.plist
+
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: build/ipa/
