@@ -3,8 +3,8 @@ version: 2.1
 executors:
   macos-executor:
     macos:
-      xcode: 14.3.1  # Puedes especificar una versión de Xcode. Elige la que mejor se adapte a tu proyecto.
-    resource_class: large  # Se recomienda 'large' para compilaciones de iOS.
+      xcode: 14.2.0 # Opcional: Cambia a una versión de Xcode compatible.
+    resource_class: medium # Usa la clase de recurso 'medium' para el plan gratuito.
 
 jobs:
   build_ios:
@@ -16,9 +16,8 @@ jobs:
           name: Set up Node.js
           command: |
             echo "Setting up Node.js"
-            nvm install 18  # Usa nvm para instalar Node.js
+            nvm install 18
             nvm use 18
-            npm install -g yarn # Opcional: Instalar yarn si lo usas
 
       - run:
           name: Install dependencies
@@ -50,10 +49,7 @@ jobs:
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
-            -destination generic/platform=iOS \
-            CODE_SIGN_STYLE="Manual" \
-            CODE_SIGN_IDENTITY="Apple Distribution: Nombre de tu Empresa (XXXXX)" \
-            PROVISIONING_PROFILE_SPECIFIER="Nombre del Perfil de Provisionamiento"
+            -destination generic/platform=iOS
 
       - run:
           name: Export .ipa
