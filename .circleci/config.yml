@@ -15,12 +15,14 @@ jobs:
           name: Set up Node.js
           command: |
             echo "Setting up Node.js"
-            nvm install 22
-            nvm use 22
+            nvm install 20
+            nvm use 20
 
       - run:
-          name: Install dependencies
-          command: npm install
+          name: Clean npm cache and install dependencies
+          command: |
+            npm cache clean --force
+            npm install
 
       - run:
           name: Add iOS platform to project
