@@ -14,16 +14,20 @@ jobs:
       - run:
           name: Change to project directory and install dependencies
           command: |
-            cd src-capacitor
+          
             npm install
             
       - run:
           name: Add iOS platform to project
-          command: npx cap add ios
+          command: |
+            cd src-capacitor
+            npx cap add ios
 
       - run:
           name: Build Quasar project
-          command: npx quasar build
+          command: |
+            cd ..
+            npx quasar build
 
       - run:
           name: Copy Quasar build to Capacitor
