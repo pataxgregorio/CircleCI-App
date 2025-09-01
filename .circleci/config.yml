@@ -21,33 +21,34 @@ jobs:
       - run:
           name: Install dependencies
           command: npm install
-            
+
       - run:
           name: Add iOS platform to project
           command: |
+            cd src-capacitor
             npx cap add ios
 
       - run:
           name: Build Quasar project
-          command: |
-            cd ..
-            npx quasar build
+          command: npx quasar build
 
       - run:
           name: Copy Quasar build to Capacitor
-          command: npx cap sync
+          command: |
+            cd src-capacitor
+            npx cap sync
 
       - run:
           name: Install Cocoapods
           command: |
-            cd ios
+            cd src-capacitor/ios
             pod install
 
       - run:
           name: Build and archive iOS project
           command: |
             xcodebuild clean archive \
-            -workspace ios/App.xcworkspace \
+            -workspace src-capacitor/ios/App.xcworkspace \
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
