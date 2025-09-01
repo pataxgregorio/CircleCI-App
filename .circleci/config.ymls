@@ -1,0 +1,69 @@
+version: 2.1
+
+executors:
+  macos-executor:
+    macos:
+      xcode: 14.2.0
+
+jobs:
+  build_ios:
+    executor: macos-executor
+    steps:
+      - checkout
+
+      - run:
+          name: Set up Node.js
+          command: |
+            echo "Setting up Node.js"
+            nvm install 22
+            nvm use 22
+
+      - run:
+          name: Install dependencies
+          command: npm install
+
+      - run:
+          name: Add iOS platform to project
+          command: npx cap add ios --project src-capacitor
+
+      - run:
+          name: Build Quasar project
+          command: npx quasar build
+
+      - run:
+          name: Copy Quasar build to Capacitor
+          command: npx cap sync --project src-capacitor
+
+      - run:
+          name: Install Cocoapods
+          command: |
+            cd src-capacitor/ios
+            pod install
+
+      - run:
+          name: Build and archive iOS project
+          command: |
+            xcodebuild clean archive \
+            -workspace src-capacitor/ios/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            -destination generic/platform=iOS
+
+      - run:
+          name: Export .ipa
+          command: |
+            xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist exportOptions.plist
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/ipa
+
+workflows:
+  build_app:
+    jobs:
+      - build_ios
