@@ -24,7 +24,7 @@ jobs:
 
       - run:
           name: Add iOS platform to project
-          command: npx cap add ios --project src-capacitor
+          command: npx cap@latest add ios
 
       - run:
           name: Build Quasar project
@@ -32,19 +32,19 @@ jobs:
 
       - run:
           name: Copy Quasar build to Capacitor
-          command: npx cap sync --project src-capacitor
+          command: npx cap@latest sync
 
       - run:
           name: Install Cocoapods
           command: |
-            cd src-capacitor/ios
+            cd ios
             pod install
 
       - run:
           name: Build and archive iOS project
           command: |
             xcodebuild clean archive \
-            -workspace src-capacitor/ios/App.xcworkspace \
+            -workspace ios/App.xcworkspace \
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
