@@ -12,21 +12,19 @@ jobs:
       - checkout
 
       - run:
-          name: Set up Node.js
+          name: Install Node.js v22 via Homebrew
           command: |
-            echo "Setting up Node.js"
-            nvm install 20
-            nvm use 20
+            brew install node@22
+            echo 'export PATH="/usr/local/opt/node@22/bin:$PATH"' >> $BASH_ENV
+            source $BASH_ENV
 
       - run:
-          name: Clean npm cache and install dependencies
-          command: |
-            npm cache clean --force
-            npm install
+          name: Install dependencies
+          command: npm install
 
       - run:
           name: Add iOS platform to project
-          command: npx cap@latest add ios
+          command: npx cap add ios
 
       - run:
           name: Build Quasar project
@@ -34,7 +32,7 @@ jobs:
 
       - run:
           name: Copy Quasar build to Capacitor
-          command: npx cap@latest sync
+          command: npx cap sync
 
       - run:
           name: Install Cocoapods
