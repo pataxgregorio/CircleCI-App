@@ -18,7 +18,7 @@ jobs:
             nvm install 20
             nvm use 20
             npm install
-            
+
       - run:
           name: Add iOS platform to project
           command: npx cap add ios --project src-capacitor
