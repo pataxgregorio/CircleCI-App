@@ -12,10 +12,15 @@ jobs:
       - checkout
 
       - run:
-          name: Change to project directory and install dependencies
+          name: Set up Node.js
           command: |
-          
-            npm install
+            echo "Setting up Node.js"
+            nvm install 22
+            nvm use 22
+
+      - run:
+          name: Install dependencies
+          command: npm install
             
       - run:
           name: Add iOS platform to project
