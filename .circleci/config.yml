@@ -20,7 +20,6 @@ jobs:
       - run:
           name: Add iOS platform to project
           command: |
-            cd src-capacitor
             npx cap add ios
 
       - run:
