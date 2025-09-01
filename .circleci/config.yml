@@ -12,8 +12,11 @@ jobs:
       - checkout
 
       - run:
-          name: Use existing Node.js
-          command: echo "Using Node.js pre-installed with the Xcode image."
+          name: Set up Node.js
+          command: |
+            echo "Setting up Node.js"
+            nvm install 20
+            nvm use 20
 
       - run:
           name: Install dependencies
