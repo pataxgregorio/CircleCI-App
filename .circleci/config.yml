@@ -12,31 +12,24 @@ jobs:
       - checkout
 
       - run:
-          name: Set up Node.js
-          command: |
-            echo "Setting up Node.js"
-            nvm install 22
-            nvm use 22
+          name: Use existing Node.js
+          command: echo "Using Node.js pre-installed with the Xcode image."
+
       - run:
           name: Install dependencies
           command: npm install
 
-      # PASO CLAVE: Agregar la plataforma iOS en el directorio correcto
       - run:
           name: Add iOS platform to project
-          command: |
-            cd src-capacitor
-            npx cap add ios
-      
+          command: npx cap add ios --project src-capacitor
+
       - run:
           name: Build Quasar project
           command: npx quasar build
 
       - run:
           name: Copy Quasar build to Capacitor
-          command: |
-            cd src-capacitor
-            npx cap sync ios
+          command: npx cap sync --project src-capacitor
 
       - run:
           name: Install Cocoapods
