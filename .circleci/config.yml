@@ -17,34 +17,38 @@ jobs:
             echo "Setting up Node.js"
             nvm install 22
             nvm use 22
-
       - run:
           name: Install dependencies
           command: npm install
 
+      # PASO CLAVE: Agregar la plataforma iOS en el directorio correcto
       - run:
           name: Add iOS platform to project
-          command: npx cap add ios --config src-capacitor/capacitor.config.json
-
+          command: |
+            cd src-capacitor
+            npx cap add ios
+      
       - run:
           name: Build Quasar project
           command: npx quasar build
 
       - run:
           name: Copy Quasar build to Capacitor
-          command: npx cap sync ios --config src-capacitor/capacitor.config.json
+          command: |
+            cd src-capacitor
+            npx cap sync ios
 
       - run:
           name: Install Cocoapods
           command: |
-            cd ios
+            cd src-capacitor/ios
             pod install
 
       - run:
           name: Build and archive iOS project
           command: |
             xcodebuild clean archive \
-            -workspace ios/App.xcworkspace \
+            -workspace src-capacitor/ios/App.xcworkspace \
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
