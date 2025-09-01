@@ -11,32 +11,15 @@ jobs:
     steps:
       - checkout
 
-      - restore_cache:
-          keys:
-            - v1-npm-dependencies-{{ .Branch }}-{{ checksum "package-lock.json" }}
-            - v1-npm-dependencies-{{ .Branch }}
-            - v1-npm-dependencies-
-
       - run:
-          name: Set up Node.js
+          name: Change to project directory and install dependencies
           command: |
-            echo "Setting up Node.js"
-            nvm install 20
-            nvm use 20
-
-      - run:
-          name: Install dependencies
-          command: npm install
-
-      - save_cache:
-          key: v1-npm-dependencies-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          paths:
-            - ~/.npm
-            - ~/node_modules
-
+            cd src-capacitor
+            npm install
+            
       - run:
           name: Add iOS platform to project
-          command: npx cap add ios --project src-capacitor
+          command: npx cap add ios
 
       - run:
           name: Build Quasar project
@@ -44,19 +27,19 @@ jobs:
 
       - run:
           name: Copy Quasar build to Capacitor
-          command: npx cap sync --project src-capacitor
+          command: npx cap sync
 
       - run:
           name: Install Cocoapods
           command: |
-            cd src-capacitor/ios
+            cd ios
             pod install
 
       - run:
           name: Build and archive iOS project
           command: |
             xcodebuild clean archive \
-            -workspace src-capacitor/ios/App.xcworkspace \
+            -workspace ios/App.xcworkspace \
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
