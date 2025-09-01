@@ -24,7 +24,7 @@ jobs:
 
       - run:
           name: Add iOS platform to project
-          command: npx cap add ios
+          command: npx cap add ios --config src-capacitor/capacitor.config.json
 
       - run:
           name: Build Quasar project
@@ -32,7 +32,7 @@ jobs:
 
       - run:
           name: Copy Quasar build to Capacitor
-          command: npx cap sync ios
+          command: npx cap sync ios --config src-capacitor/capacitor.config.json
 
       - run:
           name: Install Cocoapods
