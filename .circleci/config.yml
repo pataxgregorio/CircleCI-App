@@ -12,71 +12,63 @@ jobs:
       - checkout
 
       - run:
-          name: Setup Node.js v22 via nvm
+          name: Instalar Node.js v22 con nvm
           command: |
-            echo "Installing nvm and Node.js v22..."
-            # Descarga e instala nvm
+            echo "Instalando nvm y Node.js v22..."
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
             
-            # Carga nvm en el shell
             export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # Esto carga nvm
-            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # Esto carga el autocompletado de bash
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" 
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-            # Instala y usa Node.js v22
             nvm install 22
             nvm use 22
 
-            echo "Node.js $(node -v) y npm $(npm -v) instalados."
+            echo "Verificando versiones de Node.js y npm..."
+            node -v
+            npm -v
 
       - run:
-          name: Install Project Dependencies
+          name: Instalar dependencias del proyecto
           command: npm install
 
       - run:
-          name: Initialize Capacitor, Add iOS Platform & Install Cocoapods
+          name: Inicializar Capacitor, añadir plataforma iOS y arreglar el Podfile
           command: |
             echo "Inicializando Capacitor y añadiendo plataforma iOS..."
-            # Asegúrate de que los valores de appName y appId sean correctos para tu proyecto
             npx cap init "MyQuasarApp" "com.mycompany.myquasarapp" --web-dir dist/spa
+
             npx cap add ios
 
-            echo "Listando el contenido del directorio después de añadir la plataforma iOS para depuración..."
-            ls -aR . # Lista desde la raíz del proyecto
+            # Paso clave para solucionar el error de Cocoapods
+            # Arregla el Podfile añadiendo el post_install hook
+            sed -i '' '/post_install do |installer|/!b;n;i\    installer.pods_project.build_configurations.each do |config|\n      config.build_settings[''OTHER_LDFLAGS''] = ''-ObjC''\n    end' ios/Podfile
 
-            echo "Navegando al directorio de iOS para instalar Cocoapods..."
-            # Ajusta esta ruta si tu carpeta iOS no está directamente en la raíz (ej. src-capacitor/ios)
-            cd ios 
+            echo "Navegando al directorio de iOS e instalando Cocoapods..."
+            cd ios
             pod install
-            echo "Cocoapods instalado. Listando contenido del directorio iOS..."
-            ls -aR .
 
       - run:
-          name: Build Quasar Project
+          name: Compilar proyecto Quasar
           command: npx quasar build
 
       - run:
-          name: Sync Quasar Build to Capacitor
+          name: Copiar build de Quasar a Capacitor
           command: npx cap sync
 
       - run:
-          name: Archive and Build iOS Project
+          name: Compilar y archivar proyecto iOS
           command: |
-            echo "Archivando y compilando el proyecto iOS..."
-            # Asegúrate de que el workspace path sea correcto
-            # Si iOS está en la raíz: ios/App.xcworkspace
-            # Si iOS está en src-capacitor: src-capacitor/ios/App.xcworkspace
             xcodebuild clean archive \
-            -workspace ios/App.xcworkspace \ 
+            -workspace ios/App.xcworkspace \
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
             -destination generic/platform=iOS
 
       - run:
-          name: Export .ipa
+          name: Exportar .ipa
           command: |
-            echo "Exportando .ipa..."
             xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportPath build/ipa \
