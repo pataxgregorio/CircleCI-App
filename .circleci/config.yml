@@ -12,37 +12,38 @@ jobs:
       - checkout
 
       - run:
-          name: Install Node.js v22 via Homebrew
+          name: Instalar Node.js v22 con nvm
           command: |
-            brew install node@22
-            echo 'export PATH="/usr/local/opt/node@22/bin:$PATH"' >> $BASH_ENV
-            source $BASH_ENV
-            npm install -g npm@latest
-            
+            echo "Instalando nvm y Node.js v22..."
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+            . ~/.nvm/nvm.sh
+            nvm install 22
+            nvm use 22
+
       - run:
-          name: Install project dependencies
+          name: Instalar dependencias del proyecto
           command: npm install
 
       - run:
-          name: Add iOS platform to project
+          name: Añadir plataforma iOS
           command: npx cap add ios
 
       - run:
-          name: Build Quasar project
+          name: Compilar proyecto Quasar
           command: npx quasar build
 
       - run:
-          name: Copy Quasar build to Capacitor
+          name: Copiar build de Quasar a Capacitor
           command: npx cap sync
 
       - run:
-          name: Install Cocoapods
+          name: Instalar Cocoapods
           command: |
             cd ios
             pod install
 
       - run:
-          name: Build and archive iOS project
+          name: Compilar y archivar proyecto iOS
           command: |
             xcodebuild clean archive \
             -workspace ios/App.xcworkspace \
@@ -52,7 +53,7 @@ jobs:
             -destination generic/platform=iOS
 
       - run:
-          name: Export .ipa
+          name: Exportar .ipa
           command: |
             xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
