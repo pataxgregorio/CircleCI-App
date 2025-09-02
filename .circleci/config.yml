@@ -17,9 +17,10 @@ jobs:
             brew install node@22
             echo 'export PATH="/usr/local/opt/node@22/bin:$PATH"' >> $BASH_ENV
             source $BASH_ENV
-
+            npm install -g npm@latest
+            
       - run:
-          name: Install dependencies
+          name: Install project dependencies
           command: npm install
 
       - run:
