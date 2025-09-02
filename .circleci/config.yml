@@ -12,63 +12,109 @@ jobs:
       - checkout
 
       - run:
-          name: Instalar Node.js v22 con nvm
+          name: Setup Node.js v22 via nvm
           command: |
             echo "Instalando nvm y Node.js v22..."
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
             
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" 
-            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" 
 
             nvm install 22
             nvm use 22
 
-            echo "Verificando versiones de Node.js y npm..."
-            node -v
-            npm -v
+            echo "Node.js $(node -v) y npm $(npm -v) instalados."
 
       - run:
-          name: Instalar dependencias del proyecto
+          name: Install Project Dependencies
           command: npm install
 
       - run:
-          name: Inicializar Capacitor, añadir plataforma iOS y arreglar el Podfile
+          name: Initialize Capacitor, Add iOS Platform & Configure Podfile
           command: |
             echo "Inicializando Capacitor y añadiendo plataforma iOS..."
-            npx cap init "MyQuasarApp" "com.mycompany.myquasarapp" --web-dir dist/spa
-
+            # **IMPORTANTE:** Reemplaza "MyQuasarApp" y "com.mycompany.myquasarapp" con tus valores reales
+            npx cap init "MyQuasarApp" "com.mycompany.myquasarapp" --web-dir dist/spa # O dist/pwa si usas PWA
             npx cap add ios
 
-            # Paso clave para solucionar el error de Cocoapods
-            # Arregla el Podfile añadiendo el post_install hook
-            sed -i '' '/post_install do |installer|/!b;n;i\    installer.pods_project.build_configurations.each do |config|\n      config.build_settings[''OTHER_LDFLAGS''] = ''-ObjC''\n    end' ios/Podfile
+            echo "Navegando al directorio de iOS para crear y instalar Cocoapods..."
+            # Asegúrate de que esta ruta sea la correcta para tu proyecto
+            # Si la carpeta iOS está en la raíz, usa 'cd ios'
+            # Si la carpeta iOS está en src-capacitor, usa 'cd src-capacitor/ios'
+            cd ios 
+            
+            # --- SOLUCIÓN CLAVE: Crear Podfile desde cero con el hook post_install ---
+            # Esto evita todos los problemas de 'sed'
+            cat > Podfile <<EOF
+# Podfile generado por Capacitor CLI.
+# Se recomienda NO modificar este archivo directamente.
+# En su lugar, usa el comando 'npx cap sync' para mantenerlo actualizado.
 
-            echo "Navegando al directorio de iOS e instalando Cocoapods..."
-            cd ios
-            pod install
+# Configuración básica de la plataforma
+platform :ios, '13.0' # Asegúrate de que esta sea tu versión mínima de iOS
+
+# Define el target de tu aplicación. 'App' es el nombre por defecto de Capacitor.
+target 'App' do
+  # Descomenta la siguiente línea si usas frameworks dinámicos (común con algunos plugins)
+  # use_frameworks! :linkage => :static # Usar linkage estático si use_frameworks! está activo
+
+  # Dependencias de Cocoapods para Capacitor.
+  # Asegúrate de que la ruta sea correcta si tu node_modules no está en la raíz del proyecto.
+  pod 'Capacitor', :path => '../../node_modules/@capacitor/ios' 
+  pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/cordova'
+  # Añade aquí otras dependencias de Pods que tengas si no se añaden automáticamente.
+
+  # === INICIO DEL HOOK PARA SOLUCIONAR EL ERROR DE LAS DEPENDENCIAS ESTÁTICAS ===
+  # Este post_install hook asegura que se añada la bandera -ObjC a los flags de compilación.
+  # Esto resuelve el error "[!] The 'Pods-App' target has transitive dependencies that include statically linked binaries"
+  post_install do |installer|
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['OTHER_LDFLAGS'] = ['$(inherited)', '-ObjC']
+        # También puedes asegurar aquí la versión de despliegue de iOS si es necesario
+        # config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0' 
+      end
+    end
+  end
+  # === FIN DEL HOOK ===
+
+end
+EOF
+            echo "Podfile creado/modificado. Contenido del Podfile:"
+            cat Podfile # Muestra el contenido del Podfile para depuración
+
+            pod install --repo-update # Usar --repo-update asegura que los repositorios de CocoaPods estén actualizados
+            
+            echo "Cocoapods instalado. Listando archivos en el directorio de iOS después de pod install..."
+            ls -aR .
 
       - run:
-          name: Compilar proyecto Quasar
+          name: Build Quasar Project
           command: npx quasar build
 
       - run:
-          name: Copiar build de Quasar a Capacitor
+          name: Sync Quasar Build to Capacitor
           command: npx cap sync
 
       - run:
-          name: Compilar y archivar proyecto iOS
+          name: Archive and Build iOS Project
           command: |
+            echo "Archivando y compilando el proyecto iOS..."
+            # Asegúrate de que el workspace path sea correcto
+            # Si iOS está en la raíz: ios/App.xcworkspace
+            # Si iOS está en src-capacitor: src-capacitor/ios/App.xcworkspace
             xcodebuild clean archive \
-            -workspace ios/App.xcworkspace \
+            -workspace ios/App.xcworkspace \ 
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
             -destination generic/platform=iOS
 
       - run:
-          name: Exportar .ipa
+          name: Export .ipa
           command: |
+            echo "Exportando .ipa..."
             xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportPath build/ipa \
