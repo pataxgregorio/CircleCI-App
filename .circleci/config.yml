@@ -15,18 +15,37 @@ jobs:
           name: Instalar Node.js v22 con nvm
           command: |
             echo "Instalando nvm y Node.js v22..."
+            # Descarga e instala nvm
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-            . ~/.nvm/nvm.sh
+            
+            # Carga nvm en el shell para que los comandos `nvm` funcionen en este mismo paso
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" 
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" 
+
+            # Instala y usa Node.js v22
             nvm install 22
             nvm use 22
+
+            # Verificamos que Node.js y npm estén disponibles
+            node -v
+            npm -v
+
+            echo "npm install y npx cap init se ejecutarán en los siguientes pasos."
 
       - run:
           name: Instalar dependencias del proyecto
           command: npm install
 
       - run:
-          name: Añadir plataforma iOS
-          command: npx cap add ios
+          name: Inicializar Capacitor si es necesario y añadir plataforma iOS
+          command: |
+            # Este paso es crucial para asegurar que capacitor.config.json exista
+            # Si ya existe y está bien configurado, no hará mucho.
+            # Si no, lo creará con valores por defecto.
+            # Aseguramos que el webDir sea el correcto para Quasar.
+            npx cap init "NombreDeTuApp" "com.tudominio.app" --web-dir dist/spa # O dist/pwa si usas PWA
+            npx cap add ios
 
       - run:
           name: Compilar proyecto Quasar
@@ -39,14 +58,20 @@ jobs:
       - run:
           name: Instalar Cocoapods
           command: |
-            cd ios
+            # Ir al directorio de la plataforma iOS dentro de src-capacitor
+            # SI tu proyecto de iOS está en src-capacitor/ios, usa cd src-capacitor/ios
+            # Si iOS se agregó a la raíz (raro en Quasar), usa cd ios
+            cd ios # o cd src-capacitor/ios
             pod install
 
       - run:
           name: Compilar y archivar proyecto iOS
           command: |
+            # Ajustar la ruta del workspace según dónde esté tu proyecto de iOS
+            # Si se agregó a la raíz, es ios/App.xcworkspace
+            # Si se agregó a src-capacitor, es src-capacitor/ios/App.xcworkspace
             xcodebuild clean archive \
-            -workspace ios/App.xcworkspace \
+            -workspace ios/App.xcworkspace \ # o src-capacitor/ios/App.xcworkspace
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
