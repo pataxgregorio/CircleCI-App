@@ -12,72 +12,71 @@ jobs:
       - checkout
 
       - run:
-          name: Instalar Node.js v22 con nvm
+          name: Setup Node.js v22 via nvm
           command: |
-            echo "Listando archivos antes de la instalación de Node.js..."
-            ls -aR
-
-            echo "Instalando nvm y Node.js v22..."
+            echo "Installing nvm and Node.js v22..."
+            # Descarga e instala nvm
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
             
+            # Carga nvm en el shell
             export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" 
-            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # Esto carga nvm
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # Esto carga el autocompletado de bash
 
+            # Instala y usa Node.js v22
             nvm install 22
             nvm use 22
 
-            echo "Verificando versiones de Node.js y npm..."
-            node -v
-            npm -v
-
-            echo "Listando archivos después de la instalación de Node.js..."
-            ls -aR
+            echo "Node.js $(node -v) y npm $(npm -v) instalados."
 
       - run:
-          name: Instalar dependencias del proyecto y de Capacitor
+          name: Install Project Dependencies
           command: npm install
 
       - run:
-          name: Inicializar Capacitor, añadir plataforma iOS y configurar Cocoapods
+          name: Initialize Capacitor, Add iOS Platform & Install Cocoapods
           command: |
             echo "Inicializando Capacitor y añadiendo plataforma iOS..."
-            npx cap init "NombreDeTuApp" "com.tudominio.app" --web-dir dist/spa
-
+            # Asegúrate de que los valores de appName y appId sean correctos para tu proyecto
+            npx cap init "MyQuasarApp" "com.mycompany.myquasarapp" --web-dir dist/spa
             npx cap add ios
 
-            echo "Listando el contenido del proyecto después de añadir la plataforma iOS..."
-            ls -aR
+            echo "Listando el contenido del directorio después de añadir la plataforma iOS para depuración..."
+            ls -aR . # Lista desde la raíz del proyecto
 
-            echo "Navegando al directorio de iOS e instalando Cocoapods..."
-            # Asegúrate de que esta ruta sea la correcta para tu proyecto
-            cd ios
+            echo "Navegando al directorio de iOS para instalar Cocoapods..."
+            # Ajusta esta ruta si tu carpeta iOS no está directamente en la raíz (ej. src-capacitor/ios)
+            cd ios 
             pod install
-            
-            echo "Cocoapods ha terminado. Listando archivos en el directorio de iOS..."
-            ls -aR
+            echo "Cocoapods instalado. Listando contenido del directorio iOS..."
+            ls -aR .
 
       - run:
-          name: Compilar proyecto Quasar
+          name: Build Quasar Project
           command: npx quasar build
 
       - run:
-          name: Copiar build de Quasar a Capacitor
+          name: Sync Quasar Build to Capacitor
           command: npx cap sync
 
       - run:
-          name: Compilar y archivar proyecto iOS
+          name: Archive and Build iOS Project
           command: |
+            echo "Archivando y compilando el proyecto iOS..."
+            # Asegúrate de que el workspace path sea correcto
+            # Si iOS está en la raíz: ios/App.xcworkspace
+            # Si iOS está en src-capacitor: src-capacitor/ios/App.xcworkspace
             xcodebuild clean archive \
-            -workspace ios/App.xcworkspace \
+            -workspace ios/App.xcworkspace \ 
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
             -destination generic/platform=iOS
 
       - run:
-          name: Exportar .ipa
+          name: Export .ipa
           command: |
+            echo "Exportando .ipa..."
             xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportPath build/ipa \
